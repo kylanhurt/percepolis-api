@@ -1,0 +1,17 @@
+{
+  "name": "larang-api",
+  "version": "1.0.0",
+  "description": "API for larang / percepolis app",
+  "main": "server.js",
+  "scripts": {
+    "test": "test"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "~1.0.1",
+    "express": "~4.0.0",
+    "mongodb": "^2.2.16",
+    "mongoose": "~3.6.13"
+  }
+}
