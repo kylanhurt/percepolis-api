@@ -70,6 +70,43 @@ router.route('/users')
 		});
 	});
 
+router.route('/users/:user_email')
+	.get(function(req, res) {
+		User.findOne({ 'email': req.params.user_email }, function(err, user) {
+			if(err) {
+				res.send(err);
+			}
+			res.json(user);
+		});
+	})
+
+	.put(function(req, res) {
+		User.findOne({'email': req.params.user_email}, function(err, user) {
+			if(err) {
+				res.send(err);
+			}
+			user.email = req.body.email;
+			user.save(function(err) {
+				if(err){
+					res.send(err);
+				}
+				res.json({message: 'User updated!, req.params.user_email is: ' + req.body.email});
+			})
+		})
+	})
+
+	.delete(function(req, res) {
+		User.findOne({
+			'email': req.params.user_email
+		}).remove(function(err, user) {
+			if(err) {
+				res.send(err);
+			}
+			res.json({ message: 'User with email: ' + req.params.user_email + ' has been deleted.' });
+		})
+	})
+
+
 
 // all of our routes will be prefixed with /api
 app.use('/api', router);
