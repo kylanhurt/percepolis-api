@@ -1,7 +1,11 @@
 var express    = require('express');        // call express
 var app        = express();                 // define our app using express
 var bodyParser = require('body-parser');
+var morgan = require('morgan');
 var mongoose = require('mongoose');
+var jwt = require('jsonwebtoken');
+var config = require('./config');
+var routes = require('./routes');
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -25,25 +29,66 @@ router.get('/', function(req, res) {
     res.json({ message: 'hooray! welcome to our api!' });   
 });
 
-// more routes for our API will happen here
-
-// REGISTER OUR ROUTES -------------------------------
-
-
-// START THE SERVER
-// =============================================================================
-app.listen(port);
-console.log('Larang API happenning on port ' + port);
-
-mongoose.connect('mongodb://localhost:27017/larang');
+mongoose.connect(config.database);
 
 var User = require('./app/models/user');
+app.set('superSecret', config.secret);
 
+// use body parser so we can get info from POST and/or URL parameters
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
 
 //API ROUTES
 //================================
 
+router.route('/authenticate')
+	.post(function(req, res) {
+		User.findOne({ 
+			email: req.body.email 
+		}, function(err, user) {
+			if(err) {
+				res.send(err);
+			}
+
+			if(!user) {
+				res.status(401).json({success: false, message: "Authentication failed. Email and password combo invalid."})
+			} else if (user) {
+				if(user.password != req.body.password) {
+					res.status(401).json({ success: false, message: "Authentication failed. Email and password combo invalid." })
+				} else {
+					var token = jwt.sign({email: user.email}, req.app.settings.superSecret, {
+						expiresIn: 1440 //24 hours
+					});
+
+					res.json({
+						success: true,
+						message: "Enjoy your token.",
+						token: token
+					});
+				}
+			}
+		})
+})
+
+function checkToken(req, res, next) {
+	var token = req.body.token || req.query.token || req.headers['x-access-token'];
+	if(token) {
+		jwt.verify(token, req.app.settings.superSecret, function(err, decoded) {
+			if(err){
+				return res.json({success: false, message: 'Failed authenticate token.'})
+			} else {
+				req.decoded = decoded;
+				next();
+			}
+		})
+	} else {
+		return res.status(403).send({
+			success: false,
+			message: 'No token provided.'
+		});
+	}
+}
 
 router.route('/users')
 	.post(function(req, res) {
@@ -60,7 +105,7 @@ router.route('/users')
 		});
 	})
 
-	.get(function(req, res) {
+	.get(checkToken, function(req, res) {
 		User.find(function(err, users) {
 			if(err) {
 				res.send(err);
@@ -71,19 +116,27 @@ router.route('/users')
 	});
 
 router.route('/users/:user_email')
-	.get(function(req, res) {
+	.get(checkToken, function(req, res) {
 		User.findOne({ 'email': req.params.user_email }, function(err, user) {
 			if(err) {
 				res.send(err);
 			}
-			res.json(user);
+			if(user){
+				res.json({email: user.email});
+			}			
 		});
 	})
 
-	.put(function(req, res) {
+	.put(checkToken, function(req, res) {
 		User.findOne({'email': req.params.user_email}, function(err, user) {
 			if(err) {
 				res.send(err);
+			}
+			if(!user) {
+				res.json({
+					success: false,
+					message: 'User not found.'
+				})			
 			}
 			user.email = req.body.email;
 			user.save(function(err) {
@@ -95,7 +148,7 @@ router.route('/users/:user_email')
 		})
 	})
 
-	.delete(function(req, res) {
+	.delete(checkToken, function(req, res) {
 		User.findOne({
 			'email': req.params.user_email
 		}).remove(function(err, user) {
@@ -110,3 +163,8 @@ router.route('/users/:user_email')
 
 // all of our routes will be prefixed with /api
 app.use('/api', router);
+
+// START THE SERVER
+// =============================================================================
+app.listen(port);
+console.log('Larang API happenning on port ' + port);
