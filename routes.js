@@ -1,6 +1,13 @@
 module.exports = function(app, router, bodyParser, jwt) {
 	//API ROUTES
 	//================================
+	var bcrypt = require('bcrypt');
+	const SALTROUNDS = 7;
+	var mongoose = require('mongoose');	
+	var config = require('./config');	
+	mongoose.connect(config.database);
+
+	var User = require('./app/models/user');	
 
 	router.route('/authenticate')
 		.post(function(req, res) {
@@ -14,7 +21,8 @@ module.exports = function(app, router, bodyParser, jwt) {
 				if(!user) {
 					res.status(401).json({success: false, message: "Authentication failed. Email and password combo invalid."})
 				} else if (user) {
-					if(user.password != req.body.password) {
+
+					if( !bcrypt.compareSync(req.body.password, user.password) ) {
 						res.status(401).json({ success: false, message: "Authentication failed. Email and password combo invalid." })
 					} else {
 						var token = jwt.sign({email: user.email}, req.app.settings.superSecret, {
@@ -54,7 +62,7 @@ module.exports = function(app, router, bodyParser, jwt) {
 		.post(function(req, res) {
 			var user = new User();
 			user.email = req.body.email; 
-			user.password = req.body.password;
+			user.password = bcrypt.hashSync(req.body.password, SALTROUNDS);
 
 			user.save(function(err) {
 				if(err) {

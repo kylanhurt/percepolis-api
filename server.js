@@ -2,7 +2,6 @@ var express    = require('express');        // call express
 var app        = express();                 // define our app using express
 var bodyParser = require('body-parser');
 var morgan = require('morgan');
-var mongoose = require('mongoose');
 var jwt = require('jsonwebtoken');
 var config = require('./config');
 var router = express.Router();              // get an instance of the express Router
@@ -14,8 +13,6 @@ app.use(bodyParser.json());
 var routes = require('./routes')(app, router, bodyParser, jwt);
 
 var port = process.env.PORT || 8088;        // set our port
-
-
 
 // middleware to use for all requests
 router.use(function(req, res, next) {
@@ -32,9 +29,6 @@ router.get('/', function(req, res) {
     res.json({ message: 'API functioning correctly.' });   
 });
 
-mongoose.connect(config.database);
-
-var User = require('./app/models/user');
 app.set('superSecret', config.secret);
 
 // START THE SERVER
