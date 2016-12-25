@@ -5,14 +5,15 @@ var morgan = require('morgan');
 var mongoose = require('mongoose');
 var jwt = require('jsonwebtoken');
 var config = require('./config');
-var routes = require('./routes');
+var router = express.Router();              // get an instance of the express Router
 
-app.use(bodyParser.urlencoded({ extended: true }));
+// use body parser so we can get info from POST and/or URL parameters
+app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 var port = process.env.PORT || 8088;        // set our port
 
-var router = express.Router();              // get an instance of the express Router
+
 
 // middleware to use for all requests
 router.use(function(req, res, next) {
@@ -26,7 +27,7 @@ router.use(function(req, res, next) {
 
 // test route to make sure everything is working (accessed at GET http://localhost:8080/api)
 router.get('/', function(req, res) {
-    res.json({ message: 'hooray! welcome to our api!' });   
+    res.json({ message: 'API functioning correctly.' });   
 });
 
 mongoose.connect(config.database);
@@ -34,9 +35,7 @@ mongoose.connect(config.database);
 var User = require('./app/models/user');
 app.set('superSecret', config.secret);
 
-// use body parser so we can get info from POST and/or URL parameters
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
+
 
 
 //API ROUTES
