@@ -14,16 +14,6 @@ var routes = require('./routes')(app, router, bodyParser, jwt);
 
 var port = process.env.PORT || 8088;        // set our port
 
-// middleware to use for all requests
-router.use(function(req, res, next) {
-    // do logging
-    //console.log('Request is:', req, 'Response is:', res);
-	res.header("Access-Control-Allow-Origin", "*");
-	res.header("Access-Control-Allow-Headers", "X-Requested-With");
-	res.header('Access-Control-Allow-Headers', 'Content-Type');    
-    next(); // make sure we go to the next routes and don't stop here
-});
-
 // test route to make sure everything is working (accessed at GET http://localhost:8080/api)
 router.get('/', function(req, res) {
     res.json({ message: 'API functioning correctly.' });   

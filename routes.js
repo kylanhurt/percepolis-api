@@ -9,6 +9,16 @@ module.exports = function(app, router, bodyParser, jwt) {
 
 	var User = require('./app/models/user');	
 
+	// middleware to use for all requests
+	router.use(function(req, res, next) {
+	    // do logging
+	    //console.log('Request is:', req, 'Response is:', res);
+		res.header("Access-Control-Allow-Origin", "*");
+		res.header("Access-Control-Allow-Headers", "X-Requested-With");
+		res.header('Access-Control-Allow-Headers', 'Content-Type');    
+	    next(); // make sure we go to the next routes and don't stop here
+	});
+
 	router.route('/authenticate')
 		.post(function(req, res) {
 			User.findOne({ 
@@ -69,7 +79,14 @@ module.exports = function(app, router, bodyParser, jwt) {
 					res.send(err);
 				}
 
-				res.json({ message: "User created!" });
+				var token = jwt.sign({email: user.email}, req.app.settings.superSecret, {
+					expiresIn: 1440 * 14 //24 hours
+				});
+
+				res.json({
+					success: true,
+					token: token
+				});
 			});
 		})
 
