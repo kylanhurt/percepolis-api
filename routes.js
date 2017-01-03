@@ -1,10 +1,11 @@
+var bcrypt = require('bcrypt');
+const SALTROUNDS = 7;
+var mongoose = require('mongoose');	
+var config = require('./config');	
+
 module.exports = function(app, router, bodyParser, jwt) {
 	//API ROUTES
-	//================================
-	var bcrypt = require('bcrypt');
-	const SALTROUNDS = 7;
-	var mongoose = require('mongoose');	
-	var config = require('./config');	
+
 	mongoose.connect(config.database);
 
 	var User = require('./app/models/user');	

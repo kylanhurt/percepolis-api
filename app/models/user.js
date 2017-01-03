@@ -1,4 +1,5 @@
 var mongoose = require('mongoose');
+var timestamps = require('mongoose-timestamp');
 
 var Schema = mongoose.Schema;
 
@@ -13,9 +14,11 @@ var UserSchema = new Schema({
 		type: String,
 		required: true
 	},
-	remember_token: String,
-	created_at: Date,
-	updated_at: Date	
+	remember_token: String
+}, {
+		timestamps: true
 });
+
+
 
 module.exports = mongoose.model('User', UserSchema);
