@@ -2,9 +2,19 @@ var bcrypt = require('bcrypt');
 const SALTROUNDS = 7;
 var mongoose = require('mongoose');	
 var config = require('./config');	
+var morgan = require('morgan');
 
 module.exports = function(app, router, bodyParser, jwt) {
 	//API ROUTES
+
+ 	if(app.get("env")=="production") {
+
+        var accessLogStream = fs.createWriteStream(__dirname + '/logs/' + "access.log", {flags: 'a'});
+        app.use(morgan({stream: accessLogStream}));
+    }
+     else {
+        app.use(morgan("dev")); //log to console on development
+    }
 
 	mongoose.connect(config.database);
 
@@ -145,7 +155,36 @@ module.exports = function(app, router, bodyParser, jwt) {
 			})
 		})
 
+	var Entity = require('./app/models/entity');
 
+	router.route('/entity')
+		.post(checkToken, function(req, res) {
+			var entity = new Entity();
+			var user = new User();
+			entity.submittedByEmail = req.body.email; 
+			entity.name = req.body.name;
+
+			Entity.findOne({name: entity.name}, function(err, existingEntity) {
+				if(!existingEntity) { 
+					User.findOne({email: entity.submittedByEmail}, function(err, existingUser) {
+						var userId = existingUser._id;
+						entity.submittedByUser = userId;
+						console.log('entity is: ', entity)						
+						entity.save(function(err) {
+							if(err) {
+								res.json({error: err, message: 'Save entity error.', success: false});
+							} else {
+								res.json({message: 'New entity with name ' + entity.name + ' created.', success: true})
+							}
+							
+						})
+					})
+				} else {
+					res.json({message: 'Entity with name ' + entity.name + ' already exists.', success: false})
+				}
+			})
+
+		})
 
 	// all of our routes will be prefixed with /api
 	app.use('/api', router);	

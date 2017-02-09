@@ -15,9 +15,10 @@ var UserSchema = new Schema({
 		required: true
 	},
 	remember_token: String
-}, {
+	}, {
 		timestamps: true
-});
+	}
+);
 
 
 
