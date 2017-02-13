@@ -27,6 +27,8 @@ var EntitySchema = new Schema({
 	},
 	submittedByUser: 
 		[{ type: Schema.Types.ObjectId, ref: 'User' }]
+	}, {
+		timestamps: true
 	}
 );
 

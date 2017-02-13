@@ -185,6 +185,16 @@ module.exports = function(app, router, bodyParser, jwt) {
 			})
 
 		})
+		.get(function(req, res) {
+			Entity.find({}, '-_id name createdAt').sort('-createdAt').limit(10).exec(function(err, entities) {
+				if(err) {
+					res.json({error: err, message: 'Get entities error.', success: false})
+				} else {
+					res.json({entities: entities, success: true})
+				}
+			})
+			//res.json({message: 'Entity request received.', success: true})
+		})
 
 	// all of our routes will be prefixed with /api
 	app.use('/api', router);	
