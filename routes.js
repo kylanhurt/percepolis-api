@@ -88,16 +88,17 @@ module.exports = function(app, router, bodyParser, jwt) {
 			user.save(function(err) {
 				if(err) {
 					res.send(err);
+				} else {
+
+					var token = jwt.sign({email: user.email}, req.app.settings.superSecret, {
+						expiresIn: 1440 * 14 //24 hours
+					});
+
+					res.json({
+						success: true,
+						token: token
+					});
 				}
-
-				var token = jwt.sign({email: user.email}, req.app.settings.superSecret, {
-					expiresIn: 1440 * 14 //24 hours
-				});
-
-				res.json({
-					success: true,
-					token: token
-				});
 			});
 		})
 
@@ -112,16 +113,49 @@ module.exports = function(app, router, bodyParser, jwt) {
 		});
 
 	router.route('/users/:user_email')
-		.get(checkToken, function(req, res) {
+		.get(function(req, res) {
+			console.log('req is: ', req, 'req.params.email is: ', req.params.user_email);
+			var authorized = false;
+
+			var token = req.body.token || req.query.token || req.headers['x-access-token'];
+			if(token) {
+				jwt.verify(token, req.app.settings.superSecret, function(err, decoded) {
+					if(err){
+						return res.json({success: false, message: 'Failed authenticate token.'})
+					} else {
+						req.decoded = decoded;
+						authorized = true;
+					}
+				})
+			}
+
 			User.findOne({ 'email': req.params.user_email }, function(err, user) {
 				if(err) {
 					res.send(err);
 				}
 				if(user){
-					res.json({email: user.email});
+					res.json({email: user.email, success: true});
+				} else {
+					res.json({email: null, success: true})
 				}			
+
+				//may want to change access levels for those with vs. without tokens
+				if(authorized) {
+					if(user){
+						res.json({email: user.email, success: true});
+					} else {
+						res.json({email: null, success: true})
+					}	
+				} else {
+					if(user){
+						res.json({email: user.email, success: true});
+					} else {
+						res.json({email: null, success: true})
+					}	
+				}
 			});
 		})
+
 
 		.put(checkToken, function(req, res) {
 			User.findOne({'email': req.params.user_email}, function(err, user) {
