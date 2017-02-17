@@ -114,7 +114,6 @@ module.exports = function(app, router, bodyParser, jwt) {
 
 	router.route('/users/:user_email')
 		.get(function(req, res) {
-			console.log('req is: ', req, 'req.params.email is: ', req.params.user_email);
 			var authorized = false;
 
 			var token = req.body.token || req.query.token || req.headers['x-access-token'];
@@ -130,28 +129,21 @@ module.exports = function(app, router, bodyParser, jwt) {
 			}
 
 			User.findOne({ 'email': req.params.user_email }, function(err, user) {
+				var response;
 				if(err) {
 					res.send(err);
 				}
 				if(user){
-					res.json({email: user.email, success: true});
+					response = {email: user.email, success: true};
 				} else {
-					res.json({email: null, success: true})
+					response = {email: null, success: true};
 				}			
 
 				//may want to change access levels for those with vs. without tokens
 				if(authorized) {
-					if(user){
-						res.json({email: user.email, success: true});
-					} else {
-						res.json({email: null, success: true})
-					}	
+					res.json(response);
 				} else {
-					if(user){
-						res.json({email: user.email, success: true});
-					} else {
-						res.json({email: null, success: true})
-					}	
+					res.json(response);
 				}
 			});
 		})
