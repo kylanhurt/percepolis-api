@@ -16,6 +16,8 @@
     "mongodb": "^2.2.16",
     "mongoose": "~4.7.5",
     "mongoose-timestamp": "^0.6.0",
-    "morgan": "^1.7.0"
+    "mongoose-unique-validator": "^1.0.3",
+    "morgan": "^1.7.0",
+    "validator": "^6.2.1"
   }
 }

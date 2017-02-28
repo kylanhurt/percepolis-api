@@ -1,5 +1,6 @@
 var mongoose = require('mongoose');
 var timestamps = require('mongoose-timestamp');
+var uniqueValidator = require('mongoose-unique-validator');
 
 var Schema = mongoose.Schema;
 
@@ -7,9 +8,14 @@ var EntitySchema = new Schema({
 	name: {
 		type: String,
 		required: true,
-		unique: true
+		unique: true,
+		uniqueCaseInsensitive: true
 	},
-	website: String,
+	website: {
+		type: String,
+		unique: true,
+		uniqueCaseInsensitive: true
+	},
 	description: String,
 	yearFounded: {
 		type: Number, 
@@ -32,6 +38,6 @@ var EntitySchema = new Schema({
 	}
 );
 
-
+EntitySchema.plugin(uniqueValidator);
 
 module.exports = mongoose.model('Entity', EntitySchema);

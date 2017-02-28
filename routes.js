@@ -3,6 +3,7 @@ const SALTROUNDS = 7;
 var mongoose = require('mongoose');	
 var config = require('./config');	
 var morgan = require('morgan');
+var validator = require('validator');
 
 module.exports = function(app, router, bodyParser, jwt) {
 	//API ROUTES
@@ -40,11 +41,11 @@ module.exports = function(app, router, bodyParser, jwt) {
 				}
 
 				if(!user) {
-					res.status(401).json({success: false, message: "Authentication failed. Email and password combo invalid."})
+					res.json({success: false, message: "Authentication failed. Email and password combo invalid."})
 				} else if (user) {
 
 					if( !bcrypt.compareSync(req.body.password, user.password) ) {
-						res.status(401).json({ success: false, message: "Authentication failed. Email and password combo invalid." })
+						res.json({ success: false, message: "Authentication failed. Email and password combo invalid." })
 					} else {
 						var token = jwt.sign({email: user.email}, req.app.settings.superSecret, {
 							expiresIn: 1440 //24 hours
@@ -63,6 +64,7 @@ module.exports = function(app, router, bodyParser, jwt) {
 	function checkToken(req, res, next) {
 		var token = req.body.token || req.query.token || req.headers['x-access-token'];
 		if(token) {
+			console.log('one way or another, there is a token');
 			jwt.verify(token, req.app.settings.superSecret, function(err, decoded) {
 				if(err){
 					return res.json({success: false, message: 'Failed authenticate token.'})
@@ -84,6 +86,10 @@ module.exports = function(app, router, bodyParser, jwt) {
 			var user = new User();
 			user.email = req.body.email; 
 			user.password = bcrypt.hashSync(req.body.password, SALTROUNDS);
+
+			if(!validator.isEmail(user.email)) {
+				res.json({success: false, message: 'Not a valid email.', path: 'email', code: 2})
+			}
 
 			user.save(function(err) {
 				if(err) {
@@ -139,7 +145,7 @@ module.exports = function(app, router, bodyParser, jwt) {
 					response = {email: null, success: true};
 				}			
 
-				//may want to change access levels for those with vs. without tokens
+				//may want to change access levels for those with vs. without tokens!!
 				if(authorized) {
 					res.json(response);
 				} else {
@@ -184,7 +190,7 @@ module.exports = function(app, router, bodyParser, jwt) {
 	var Entity = require('./app/models/entity');
 
 	router.route('/entity')
-		.post(checkToken, function(req, res) {
+		.post(function(req, res) {
 			var entity = new Entity();
 			var user = new User();
 			entity.submittedByEmail = req.body.email; 
@@ -206,7 +212,7 @@ module.exports = function(app, router, bodyParser, jwt) {
 						})
 					})
 				} else {
-					res.json({message: 'Entity with name ' + entity.name + ' already exists.', success: false})
+					res.json({message: 'Entity with name "' + entity.name + '" already exists.', success: false})
 				}
 			})
 
